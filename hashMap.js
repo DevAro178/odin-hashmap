@@ -2,17 +2,18 @@ import LinkedList from "./linkedList.js";
 
 export default class hashMap {
   constructor() {
-    this.hashTable = [];
-    this.initializeBuckets(16);
+    this.hashTable = this.initializeBuckets(16);
     this.capacity = this.hashTable.length;
     this.loadFactor = 0.8;
   }
 
   initializeBuckets(size) {
+    let temp = [];
     for (let index = 0; index < size; index++) {
       const list = new LinkedList();
-      this.hashTable[index] = list;
+      temp[index] = list;
     }
+    return temp;
   }
 
   hash(key) {
@@ -23,7 +24,7 @@ export default class hashMap {
       hashCode = primeNumber * hashCode + key.charCodeAt(i);
     }
 
-    return hashCode % this.hashTable.length;
+    return hashCode % this.capacity;
   }
 
   set(key, value) {
@@ -31,6 +32,9 @@ export default class hashMap {
     let foundIndex = this.hashTable[index].find(key);
     if (foundIndex == null) this.hashTable[index].append(key, value);
     else this.hashTable[index].update(key, value);
+    if (this.length() > this.capacity * this.loadFactor) {
+      this.hashTable = this.growBucket();
+    }
   }
 
   get(key) {
@@ -83,5 +87,20 @@ export default class hashMap {
       arr.push(...e.entries());
     });
     return arr;
+  }
+
+  growBucket() {
+    let entries = [];
+    this.capacity = this.capacity * 2;
+
+    this.hashTable.forEach((e) => {
+      entries.push(...e.entries());
+    });
+
+    let newHashTable = this.initializeBuckets(this.capacity);
+    entries.forEach((e) => {
+      newHashTable[this.hash(e[0])].append(e[0], e[1]);
+    });
+    return newHashTable;
   }
 }
